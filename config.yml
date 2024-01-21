@@ -1,0 +1,84 @@
+#开始参数
+start:
+  reloadData: false #重新加载数据集
+  startTrain: false #开始训练
+  evalLFW: false #开始LFW评估
+  predict: true #开启人脸预测
+
+#人脸预测参数
+predict:
+  type: facenet
+  photoType: '*.png;*.jpg;*.jpeg;*.tif;*.bmp'
+  inputSize: [224, 224, 3]
+  cuda: true
+  resize: true
+  backbone: mobilenet
+  weightPath: logs/ep070-loss0.048-val_loss0.103.pth
+
+#LFW评估参数
+LFW:
+  cuda: true #gpu加速
+  backbone: mobilenet #主干网络
+  inputSize: [224,224,3] #输入尺寸
+  weightPath: logs/ep070-loss0.048-val_loss0.103.pth #权重路径
+  dirPath: dataset/lfw #数据位置
+  pairPath: lfwEvalInfo/lfw_pair.txt #数据对位置
+  batchSize: 256 #批次大小
+  logInterval: 1 #记录间隔
+  pngPath: lfwEvalInfo/roc_test.png #结果路径
+
+#人脸识别数据集参数
+dataset:
+  locate: dataset #数据集目录
+  name: #数据集文件夹名字
+#  - casia
+#  - pose
+  - lfw
+  type: #数据集数据格式
+#  - bmp
+#  - tif
+  - jpg
+  minNum: 2 #每个人最少照片数量
+  maxNum: 40 #每个人最多照片数量
+
+#人脸识别训练参数
+train:
+  cuda: true #GPU加速
+  fp16: true #是否使用混合精度（可减少显存，需pytorch1.7.1以上）
+  dataPath: train_data.txt #数据及标签路径
+  inputSize: [224,224,3] #输入图像大小
+  backbone: mobilenet #主干特征提取网络 mobilenet、
+  weightPath: '' #模型权重路径
+  preTrained: false #是否预训练
+  batchSize: 150 #批次大小（faceNet需为3的倍数）
+  startEpoch: 0 #开始轮次
+  endEpoch: 100 #结束轮次
+  maxLR: 0.01 #模型最大学习率
+  minLR: 0.0001 #模型最小学习率(常为maxLR*0.01)
+
+  #学习率限制（用于自适应调整，防止学习率设置不合理）
+  nbs: 64 #参照批次大小
+  maxLimitLR: 0.001 #参照最大学习率adam：0.001，sgd:0.1
+  minLimitLR: 0.0003 #参照最小学习率adam：0.0003，sgd:0.0005
+
+  LrDecayType: cos #学习率下降方式 step、cos
+  LRscheduler: #学习率下降参数
+    cos:
+      lrRate: 0.1 #起始学习率占maxLR的比率
+      lrLimt: 0.000001 #最小起始学习率
+      start: 0.1 #上升周期占总轮次比率
+      startLimit: 5 #上升轮次上限
+      end: 0.3 #保持最低学习率周期占总轮次比率
+      endLimit: 15 #保持最低学习率轮次上限
+    step:
+      stepNum: 10 #步降学习率次数
+
+  optimizer: 'adam' #优化器种类 adam、sgd 建议maxLR:1e-3、le-2
+  momentum: 0.9 #优化器内momentum参数
+  weightDecay: 0 #权值衰减（防止过拟合）adam:0、sgd:5e-4
+  savePeriod: 10 #保存训练权重间隔
+  saveDir: logs #权值及日志保存的文件夹位置
+  numWorkers: 2 #多线程读取数据
+  valRate: 0.1 #验证集比例
+  lfwEval: false #是否使用LFW评估
+
