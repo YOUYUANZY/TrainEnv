@@ -7,13 +7,13 @@ start:
 
 #人脸预测参数
 predict:
-  type: facenet
-  photoType: '*.png;*.jpg;*.jpeg;*.tif;*.bmp'
-  inputSize: [224, 224, 3]
-  cuda: true
-  resize: true
-  backbone: mobilenet
-  weightPath: logs/ep070-loss0.048-val_loss0.103.pth
+  type: facenet #模型类型
+  photoType: '*.png;*.jpg;*.jpeg;*.tif;*.bmp' #可用数据类型
+  inputSize: [224, 224, 3] #输入大小
+  cuda: true #gpu加速
+  resize: true #不失真resize
+  backbone: mobilenet #主干网络
+  weightPath: logs/ep070-loss0.048-val_loss0.103.pth #权重路径
 
 #LFW评估参数
 LFW:
