@@ -1,4 +1,6 @@
+import torch
 import torch.nn as nn
+from torchsummary import summary
 
 
 def conv_bn(inp, oup, stride=1):
@@ -72,3 +74,11 @@ class MobileNetV1(nn.Module):
         x = x.view(-1, 1024)
         x = self.fc(x)
         return x
+
+
+if __name__ == '__main__':
+    a = MobileNetV1()
+    device = torch.device('cuda:0')
+    a = a.to(device)
+    a.cuda()
+    summary(a, (3, 224, 224))

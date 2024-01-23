@@ -1,14 +1,14 @@
 #开始参数
 start:
-  reloadData: false #重新加载数据集
-  startTrain: false #开始训练
+  reloadData: true #重新加载数据集
+  startTrain: true #开始训练
   evalLFW: false #开始LFW评估
-  predict: true #开启人脸预测
+  predict: false #开启人脸预测
 
 #人脸预测参数
 predict:
   type: facenet #模型类型
-  photoType: '*.png;*.jpg;*.jpeg;*.tif;*.bmp' #可用数据类型
+  photoType: '*.png;*.jpg;*.jpeg;*.tif;*.bmp;*.pgm' #可用数据类型
   inputSize: [224, 224, 3] #输入大小
   cuda: true #gpu加速
   resize: true #不失真resize
@@ -33,11 +33,13 @@ dataset:
   name: #数据集文件夹名字
 #  - casia
 #  - pose
-  - lfw
+#  - lfw
+  - orl
   type: #数据集数据格式
 #  - bmp
 #  - tif
-  - jpg
+#  - jpg
+  - pgm
   minNum: 2 #每个人最少照片数量
   maxNum: 40 #每个人最多照片数量
 
@@ -48,9 +50,11 @@ train:
   dataPath: train_data.txt #数据及标签路径
   inputSize: [224,224,3] #输入图像大小
   backbone: mobilenet #主干特征提取网络 mobilenet、
+  attention: AFNB #注意力机制 CBAM、APNB、AFNB、GCNet、SE、scSE、Triplet
+  onlyAttention: true #只训练注意力机制部分
   weightPath: '' #模型权重路径
   preTrained: false #是否预训练
-  batchSize: 150 #批次大小（faceNet需为3的倍数）
+  batchSize: 30 #批次大小（faceNet需为3的倍数）
   startEpoch: 0 #开始轮次
   endEpoch: 100 #结束轮次
   maxLR: 0.01 #模型最大学习率
@@ -65,7 +69,7 @@ train:
   LRscheduler: #学习率下降参数
     cos:
       lrRate: 0.1 #起始学习率占maxLR的比率
-      lrLimt: 0.000001 #最小起始学习率
+      lrLimit: 0.000001 #最小起始学习率
       start: 0.1 #上升周期占总轮次比率
       startLimit: 5 #上升轮次上限
       end: 0.3 #保持最低学习率周期占总轮次比率
