@@ -120,10 +120,10 @@ class Facenet(nn.Module):
 
 
 if __name__ == '__main__':
-    a = Facenet(mode='predict', attention="Triplet")
-    for name, value in a.named_parameters():
-        print(name)
-    # device = torch.device('cuda:0')
-    # a = a.to(device)
-    # a.cuda()
-    # summary(a, (3, 224, 224))
+    a = Facenet(mode='predict', attention="AFNB")
+    # for name, value in a.named_parameters():
+    #     print(name)
+    device = torch.device('cuda:0')
+    a = a.to(device)
+    a.cuda()
+    summary(a, (3, 112, 112))

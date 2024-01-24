@@ -1,4 +1,7 @@
+import random
+
 import numpy as np
+import torch
 from PIL import Image
 
 
@@ -50,3 +53,14 @@ def get_lr(optimizer):
 def preprocess_input(image):
     image /= 255.0
     return image
+
+
+# 设置种子
+def seed_everything(seed=11):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False

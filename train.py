@@ -2,17 +2,20 @@ import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
+
+from nets.arcface import Arcface
 from nets.facenet import Facenet
 from torch.utils.data import DataLoader
 
 from utils.lossRecord import LossHistory
-from utils.dataloader import FacenetDataset, LFWDataset, dataset_collate
+from utils.dataloader import FacenetDataset, LFWDataset, face_dataset_collate, arcFaceDataset, arc_dataset_collate
 from utils.training import get_Lr_Fun, set_lr, triplet_loss
-from utils.utils import get_num_classes
+from utils.utils import get_num_classes, seed_everything
 from utils.epochTrain import epochTrain
 
 
 def train(config, lfw):
+    seed_everything(11)
     # 获取训练设备
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # 一个标记(既负责提示信息又代表设备序号)
@@ -20,7 +23,13 @@ def train(config, lfw):
     # 获取标签数量
     num_classes = get_num_classes(config.dataPath)
     # 加载模型
-    model = Facenet(backbone=config.backbone, attention=config.attention, num_classes=num_classes, pretrained=config.preTrained)
+    if config.model == 'facenet':
+        model = Facenet(backbone=config.backbone, attention=config.attention, num_classes=num_classes,
+                        pretrained=config.preTrained)
+    elif config.model == 'arcface':
+        model = Arcface(num_classes=num_classes, backbone=config.backbone, pretrained=config.preTrained)
+    else:
+        raise ValueError('model unsupported')
     # 加载权重
     if config.weightPath != '':
         if flag == 0:
@@ -103,25 +112,34 @@ def train(config, lfw):
     if epoch_step == 0 or epoch_step_val == 0:
         raise ValueError("数据集过小，无法继续进行训练，请扩充数据集。")
     # 构建数据集加载器
-    train_dataset = FacenetDataset(config.inputSize, lines[:num_train], num_classes, random=True)
-    val_dataset = FacenetDataset(config.inputSize, lines[num_train:], num_classes, random=False)
+    if config.model == 'facenet':
+        train_dataset = FacenetDataset(config.inputSize, lines[:num_train], num_classes, random=True)
+        val_dataset = FacenetDataset(config.inputSize, lines[num_train:], num_classes, random=False)
+    elif config.model == 'arcface':
+        train_dataset = arcFaceDataset(config.inputSize, lines[:num_train], random=True)
+        val_dataset = arcFaceDataset(config.inputSize, lines[num_train:], random=False)
+    else:
+        raise ValueError('dataset unsupported')
     # 获得训练和验证数据集
     train_sampler = None
     val_sampler = None
     shuffle = True
-    gen = DataLoader(train_dataset, shuffle=shuffle, batch_size=config.batchSize // 3,
+    batchSize = config.batchSize // 3 if config.model == 'facenet' else config.batchSize
+    collate_fn = face_dataset_collate if config.model == 'facenet' else arc_dataset_collate
+    gen = DataLoader(train_dataset, shuffle=shuffle, batch_size=batchSize,
                      num_workers=config.numWorkers,
-                     pin_memory=False,
-                     drop_last=True, collate_fn=dataset_collate, sampler=train_sampler)
-    gen_val = DataLoader(val_dataset, shuffle=shuffle, batch_size=config.batchSize // 3,
+                     pin_memory=True,
+                     drop_last=True, collate_fn=collate_fn, sampler=train_sampler)
+    gen_val = DataLoader(val_dataset, shuffle=shuffle, batch_size=batchSize,
                          num_workers=config.numWorkers,
-                         pin_memory=False,
-                         drop_last=True, collate_fn=dataset_collate, sampler=val_sampler)
+                         pin_memory=True,
+                         drop_last=True, collate_fn=collate_fn, sampler=val_sampler)
     # 开始训练
 
     for epoch in range(config.startEpoch, config.endEpoch):
         set_lr(optimizer, lr_func, epoch)
-        epochTrain(model_train, model, loss_history, loss, optimizer, epoch, epoch_step, epoch_step_val, gen,
+        epochTrain(config.model, model_train, model, loss_history, loss, optimizer, epoch, epoch_step, epoch_step_val,
+                   gen,
                    gen_val, config.endEpoch, config.cuda, LFW_loader, config.batchSize // 3, config.lfwEval,
                    config.fp16, scaler, config.savePeriod, config.saveDir, flag)
     # 训练结束

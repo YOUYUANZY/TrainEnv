@@ -48,10 +48,11 @@ train:
   cuda: true #GPU加速
   fp16: true #是否使用混合精度（可减少显存，需pytorch1.7.1以上）
   dataPath: train_data.txt #数据及标签路径
-  inputSize: [224,224,3] #输入图像大小
-  backbone: mobilenet #主干特征提取网络 mobilenet、
+  inputSize: [224,224,3] #输入图像大小 facenet[224,224,3]、arcface[112,112,3]
+  model: facenet #识别模型 facenet、arcface
+  backbone: mobilenet #主干特征提取网络 mobilenet(facenet)、mobilefacenet(arcface)
   attention: AFNB #注意力机制 CBAM、APNB、AFNB、GCNet、SE、scSE、Triplet
-  onlyAttention: true #只训练注意力机制部分
+  onlyAttention: false #只训练注意力机制部分
   weightPath: '' #模型权重路径
   preTrained: false #是否预训练
   batchSize: 30 #批次大小（faceNet需为3的倍数）
